@@ -27,5 +27,17 @@ resource "aws_s3_bucket" "redirect" {
     website {
         redirect_all_requests_to = "${var.domain}"
     }
+}
 
+# recurso nulo para executar com trigger para toda vez que o build for alterado 
+resource "null_resource" "site_files" {
+    triggers {
+        react_build = "${md5("../website/build/index.html")}"
+    }
+
+    provisioner "local-exec" {
+        command = "aws s3 sync ../website/build/ s3://${var.domain}"
+    }
+
+    depends_on = ["aws_s3_bucket.site"]
 }
